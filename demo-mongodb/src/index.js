@@ -1,7 +1,7 @@
 import db from "./connection.js";
 
 const createCollection = async () => {
-  await db.connection.createCollection("temporaltest", {
+  await db.connection.createCollection("subject", {
     timeseries: {
       timeField: "timestamp",
       metaField: "metadata",
@@ -11,121 +11,92 @@ const createCollection = async () => {
 };
 
 const insertData = async () => {
-  await db.connection.collection("temporaltest").insertMany([
+  await db.connection.collection("subject").insertMany([
     {
-      metadata: { sensorId: 5578, type: "temperature" },
-      timestamp: new Date("2021-05-18T00:00:00.000Z"),
-      temp: 12,
+      metadata: {
+        subjectId: 1,
+        subjectName: "Sistemas Gestores de Base de Dados",
+        students: [2050619, 200000, 200001, 200002],
+      },
+      timestamp: new Date("2021-11-05T00:00:00.000Z"),
     },
     {
-      metadata: { sensorId: 5578, type: "temperature" },
-      timestamp: new Date("2021-05-18T04:00:00.000Z"),
-      temp: 11,
+      metadata: {
+        subjectId: 1,
+        subjectName: "Sistemas Gestores de Base de Dados",
+        students: [2050619, 200000, 200001, 200002, 200003],
+      },
+      timestamp: new Date("2021-11-06T00:00:00.000Z"),
     },
     {
-      metadata: { sensorId: 5578, type: "temperature" },
-      timestamp: new Date("2021-05-18T08:00:00.000Z"),
-      temp: 11,
+      metadata: {
+        subjectId: 1,
+        subjectName: "Sistemas Gestores de Base de Dados",
+        students: [2050619, 200000, 200002, 200003],
+      },
+      timestamp: new Date("2021-11-08T00:00:00.000Z"),
     },
     {
-      metadata: { sensorId: 5578, type: "temperature" },
-      timestamp: new Date("2021-05-18T12:00:00.000Z"),
-      temp: 12,
-    },
-    {
-      metadata: { sensorId: 5578, type: "temperature" },
-      timestamp: new Date("2021-05-18T16:00:00.000Z"),
-      temp: 16,
-    },
-    {
-      metadata: { sensorId: 5578, type: "temperature" },
-      timestamp: new Date("2021-05-18T20:00:00.000Z"),
-      temp: 15,
-    },
-    {
-      metadata: { sensorId: 5578, type: "temperature" },
-      timestamp: new Date("2021-05-19T00:00:00.000Z"),
-      temp: 13,
-    },
-    {
-      metadata: { sensorId: 5578, type: "temperature" },
-      timestamp: new Date("2021-05-19T04:00:00.000Z"),
-      temp: 12,
-    },
-    {
-      metadata: { sensorId: 5578, type: "temperature" },
-      timestamp: new Date("2021-05-19T08:00:00.000Z"),
-      temp: 11,
-    },
-    {
-      metadata: { sensorId: 5578, type: "temperature" },
-      timestamp: new Date("2021-05-19T12:00:00.000Z"),
-      temp: 12,
-    },
-    {
-      metadata: { sensorId: 5578, type: "temperature" },
-      timestamp: new Date("2021-05-19T16:00:00.000Z"),
-      temp: 17,
-    },
-    {
-      metadata: { sensorId: 5578, type: "temperature" },
-      timestamp: new Date("2021-05-19T20:00:00.000Z"),
-      temp: 12,
+      metadata: {
+        subjectId: 1,
+        subjectName: "Sistemas Gestores de Base de Dados",
+        students: [2050619],
+      },
+      timestamp: new Date("2021-11-14T00:00:00.000Z"),
     },
   ]);
 };
 
-const queryData = async () => {
-  const data = await db.connection.collection("temporaltest").findOne({
-    timestamp: new Date("2021-05-18T00:00:00.000Z"),
-  });
-  console.log(data);
+const setup = async () => {
+  await createCollection();
+  await insertData();
 };
 
+const queryData = async () => {
+  // Query 1: Quantos alunos estavam inscritos no dia 14/11?
+  const query1 = await db.connection.collection("subject").findOne({
+    timestamp: new Date("2021-11-14T00:00:00.000Z"),
+  });
+  const res_query1 = query1.metadata.students.length;
+  console.log(
+    `Estavam inscrito(s) ${res_query1} na disciplina de SGDB no dia 14/11.`
+  );
+
+  // Query 2: Quantos alunos desistiram entre o dia 08/11 a 14/11?
+  const query2_part1 = await db.connection.collection("subject").findOne({
+    timestamp: new Date("2021-11-14T00:00:00.000Z"),
+  });
+  const query2_part2 = await db.connection.collection("subject").findOne({
+    timestamp: new Date("2021-11-08T00:00:00.000Z"),
+  });
+  const res_query2 =
+    query2_part2.metadata.students.length -
+    query2_part1.metadata.students.length;
+  console.log(
+    `Desistiram da disciplina de SGBD ${res_query2} alunos entre 08/11 a 14/11.`
+  );
+
+  // Query 3: Qual foi a média de alunos inscritos durante o dia 05/11 a 14/11?
+  const start = new Date("2021-11-05T00:00:00.000Z");
+  const end = new Date("2021-11-14T00:00:00.000Z");
+  const query3 = db.connection.collection("subject").find({
+    timestamp: { $gte: start, $lte: end },
+  });
+  let i = 0;
+  let j = 0;
+  await query3.forEach((e) => {
+    i += e.metadata.students.length;
+    j++;
+  });
+  const res_query3 = i / j;
+  console.log(
+    `Média de alunos em SGBD entre o período 05/11 a 14/11: ${res_query3}`
+  );
+};
+
+// Rodar apenas uma vez
+//setup();
+
+console.time("Tempo de completude das queries:");
 await queryData();
-
-/* const studentSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  number: {
-    type: Number,
-    required: true,
-  },
-});
-
-const studentModel = mongoose.model("Student", studentSchema);
-
-const subjectSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  students: [
-    {
-      id: {
-        type: mongoose.Types.ObjectId,
-        ref: "Student",
-      },
-      enrolled_at: {
-        type: Date,
-        default: Date.now(),
-      },
-    },
-  ],
-  enrolled: {
-    type: Number,
-    default: 0,
-  },
-});
-
-const subjectModel = mongoose.model("Subject", subjectSchema);
-
-const student1 = await studentModel.create({
-  name: "Francisco Barros",
-  number: 2050619,
-});
-
-const subject = await subjectModel.create({});
- */
+console.timeEnd("Tempo de completude das queries:");
