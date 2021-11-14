@@ -17,6 +17,7 @@ const insertData = async () => {
         subjectId: 1,
         subjectName: "Sistemas Gestores de Base de Dados",
         students: [2050619, 200000, 200001, 200002],
+        enrolled: 4,
       },
       timestamp: new Date("2021-11-05T00:00:00.000Z"),
     },
@@ -25,6 +26,7 @@ const insertData = async () => {
         subjectId: 1,
         subjectName: "Sistemas Gestores de Base de Dados",
         students: [2050619, 200000, 200001, 200002, 200003],
+        enrolled: 5,
       },
       timestamp: new Date("2021-11-06T00:00:00.000Z"),
     },
@@ -33,6 +35,7 @@ const insertData = async () => {
         subjectId: 1,
         subjectName: "Sistemas Gestores de Base de Dados",
         students: [2050619, 200000, 200002, 200003],
+        enrolled: 4,
       },
       timestamp: new Date("2021-11-08T00:00:00.000Z"),
     },
@@ -41,6 +44,7 @@ const insertData = async () => {
         subjectId: 1,
         subjectName: "Sistemas Gestores de Base de Dados",
         students: [2050619],
+        enrolled: 1,
       },
       timestamp: new Date("2021-11-14T00:00:00.000Z"),
     },
@@ -54,15 +58,18 @@ const setup = async () => {
 
 const queryData = async () => {
   // Query 1: Quantos alunos estavam inscritos no dia 14/11?
+  console.time("Tempo de completude da query 1");
   const query1 = await db.connection.collection("subject").findOne({
     timestamp: new Date("2021-11-14T00:00:00.000Z"),
   });
-  const res_query1 = query1.metadata.students.length;
+  const res_query1 = query1.metadata.enrolled;
+  console.timeEnd("Tempo de completude da query 1");
   console.log(
-    `Estavam inscrito(s) ${res_query1} na disciplina de SGDB no dia 14/11.`
+    `Estavam inscrito(s) ${res_query1} aluno(s) na disciplina de SGDB no dia 14/11.`
   );
 
   // Query 2: Quantos alunos desistiram entre o dia 08/11 a 14/11?
+  console.time("Tempo de completude da query 2");
   const query2_part1 = await db.connection.collection("subject").findOne({
     timestamp: new Date("2021-11-14T00:00:00.000Z"),
   });
@@ -70,25 +77,28 @@ const queryData = async () => {
     timestamp: new Date("2021-11-08T00:00:00.000Z"),
   });
   const res_query2 =
-    query2_part2.metadata.students.length -
-    query2_part1.metadata.students.length;
+    query2_part2.metadata.enrolled -
+    query2_part1.metadata.enrolled;
+  console.timeEnd("Tempo de completude da query 2");
   console.log(
     `Desistiram da disciplina de SGBD ${res_query2} alunos entre 08/11 a 14/11.`
   );
 
+
   // Query 3: Qual foi a média de alunos inscritos durante o dia 05/11 a 14/11?
-  const start = new Date("2021-11-05T00:00:00.000Z");
-  const end = new Date("2021-11-14T00:00:00.000Z");
-  const query3 = db.connection.collection("subject").find({
-    timestamp: { $gte: start, $lte: end },
-  });
-  let i = 0;
-  let j = 0;
-  await query3.forEach((e) => {
-    i += e.metadata.students.length;
-    j++;
-  });
-  const res_query3 = i / j;
+  const start_query3 = new Date("2021-11-05T00:00:00.000Z");
+  const end_query3 = new Date("2021-11-14T00:00:00.000Z");
+  let res_query3;
+  console.time("Tempo de completude da query 3");
+  await db.connection
+    .collection("subject")
+    .aggregate([
+      { $match: { timestamp: { $gte: start_query3, $lte: end_query3 } } },
+      { $group: { _id: null, average: { $avg: "$metadata.enrolled" } } },
+    ])
+    .forEach((e) => (res_query3 = e.average));
+
+  console.timeEnd("Tempo de completude da query 3");
   console.log(
     `Média de alunos em SGBD entre o período 05/11 a 14/11: ${res_query3}`
   );
@@ -97,6 +107,4 @@ const queryData = async () => {
 // Rodar apenas uma vez
 //setup();
 
-console.time("Tempo de completude das queries:");
 await queryData();
-console.timeEnd("Tempo de completude das queries:");
