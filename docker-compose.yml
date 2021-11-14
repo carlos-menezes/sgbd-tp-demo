@@ -1,0 +1,19 @@
+version: '3.1'
+
+services:
+
+  db:
+    image: mariadb
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=sgbdtp
+      - MYSQL_PASSWORD=sgbdtp
+      - MYSQL_USER=sgbdtp
+      - MYSQL_DATABASE=temporal
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
