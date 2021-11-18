@@ -52,8 +52,13 @@ const insertData = async () => {
 };
 
 const setup = async () => {
-  await createCollection();
-  await insertData();
+	try {
+		await createCollection();
+	} catch {}
+
+	try {
+		await insertData();
+	} catch {}
 };
 
 const queryData = async () => {
@@ -105,6 +110,5 @@ const queryData = async () => {
 };
 
 // Rodar apenas uma vez
-//setup();
-
+setup();
 await queryData();
