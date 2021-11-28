@@ -1,5 +1,5 @@
 up:
-	docker-compose up -d --remove-orphans
+	docker-compose up -d --remove-orphans || sudo docker compose up
 
 down:
 	docker-compose down
