@@ -1,7 +1,0 @@
-UPDATE ticket_av
-FOR PORTION OF time_period FROM '2021-11-23 00:00:00' TO '9999-12-31 23:59:59'
-SET state = 'FIXED';
-
-UPDATE ticket_av
-FOR PORTION OF time_period FROM '2013-01-01 00:00:00' TO '2017-12-31 23:59:59'
-SET state = 'INVALID';

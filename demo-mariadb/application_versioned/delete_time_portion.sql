@@ -1,2 +1,0 @@
-DELETE FROM ticket_av
-FOR PORTION OF time_period FROM '2013-01-01' TO '2013-12-31';
